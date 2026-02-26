@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Smart Bike Pass System - Home{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:80px 20px">
+  <div style="font-size:4rem">🏍️</div>
+  <h1 style="color:#0a192f;font-size:2.2rem;margin:18px 0 12px">Smart Bike Pass System</h1>
+  <p style="color:#64748b;font-size:1.1rem;max-width:520px;margin:0 auto 36px">
+    Secure digital bike pass approval portal for students. Apply online, track your application, and get your QR-coded
+    pass instantly upon approval.
+  </p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+    <a href="/apply" class="btn btn-primary" style="font-size:1rem;padding:14px 32px">📋 Apply for Bike Pass</a>
+    <a href="/status" class="btn btn-info" style="font-size:1rem;padding:14px 32px">🔍 Check Application Status</a>
+  </div>
+
+  <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-top:60px">
+    <div class="card" style="width:220px;text-align:center">
+      <div style="font-size:2rem">📄</div>
+      <h3 style="margin:10px 0 6px;font-size:1rem">Step 1: Apply</h3>
+      <p style="color:#64748b;font-size:.85rem">Fill the form & upload documents</p>
+    </div>
+    <div class="card" style="width:220px;text-align:center">
+      <div style="font-size:2rem">🔎</div>
+      <h3 style="margin:10px 0 6px;font-size:1rem">Step 2: Transport Review</h3>
+      <p style="color:#64748b;font-size:.85rem">Documents verified by transport in-charge</p>
+    </div>
+    <div class="card" style="width:220px;text-align:center">
+      <div style="font-size:2rem">✅</div>
+      <h3 style="margin:10px 0 6px;font-size:1rem">Step 3: Principal Approval</h3>
+      <p style="color:#64748b;font-size:.85rem">Final sign-off by the principal</p>
+    </div>
+    <div class="card" style="width:220px;text-align:center">
+      <div style="font-size:2rem">📱</div>
+      <h3 style="margin:10px 0 6px;font-size:1rem">Step 4: Get QR Pass</h3>
+      <p style="color:#64748b;font-size:.85rem">Scan at main gate for entry</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container" style="max-width:1100px">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2>⚙️ Admin Dashboard</h2>
+      <span style="color:#64748b;font-size:.9rem">Logged in as: <strong>{{ username }}</strong></span>
+    </div>
+
+    <!-- Stats -->
+    <div id="stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:28px">
+      <div class="spinner">Loading...</div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="border-bottom:2px solid #e2e8f0;margin-bottom:20px;display:flex;gap:4px">
+      <button class="btn" id="tab-all" onclick="showTab('all')" style="background:#0a192f;color:#fff;border-radius:7px 7px 0 0">All Applications</button>
+      <button class="btn" id="tab-log" onclick="showTab('log')" style="background:#e2e8f0;color:#475569;border-radius:7px 7px 0 0">Audit Log</button>
+    </div>
+
+    <div id="tab-all-content">
+      <input type="text" id="search" placeholder="🔍 Search by name, pass ID, vehicle..." oninput="filterTable()" style="max-width:400px;margin-bottom:16px">
+      <div id="all-list"><div class="spinner">⏳ Loading...</div></div>
+    </div>
+    <div id="tab-log-content" style="display:none">
+      <div id="log-list"><div class="spinner">⏳ Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allApps = [];
+
+async function loadStats() {
+  const res = await fetch('/api/admin/stats');
+  const s = await res.json();
+  document.getElementById('stats').innerHTML = [
+    ['Total',s.total,'#0a192f'],
+    ['Pending',s.pending,'#d97706'],
+    ['Transport OK',s.transport_verified,'#0284c7'],
+    ['Approved',s.approved,'#16a34a'],
+    ['Rejected',(s.transport_rejected||0)+(s.principal_rejected||0),'#dc2626']
+  ].map(([label,val,color])=>`
+    <div style="background:${color};color:#fff;border-radius:10px;padding:16px;text-align:center">
+      <div style="font-size:1.8rem;font-weight:700">${val}</div>
+      <div style="font-size:.85rem;opacity:.85">${label}</div>
+    </div>`).join('');
+}
+
+async function loadAll() {
+  const res = await fetch('/api/admin/all');
+  allApps = await res.json();
+  renderTable(allApps);
+}
+
+function renderTable(apps) {
+  if (!apps.length) { document.getElementById('all-list').innerHTML='<div class="alert alert-info">No applications found.</div>'; return; }
+  document.getElementById('all-list').innerHTML = `<div style="overflow-x:auto"><table>
+    <thead><tr><th>Pass ID</th><th>Name</th><th>Roll No</th><th>Dept</th><th>Vehicle</th><th>Status</th><th>Submitted</th></tr></thead>
+    <tbody>${apps.map(a=>`<tr>
+      <td><code>${a.pass_id}</code></td>
+      <td>${a.full_name}</td>
+      <td>${a.roll_no}</td>
+      <td>${a.department}</td>
+      <td>${a.vehicle_no}</td>
+      <td><span class="badge badge-${a.status}">${a.status}</span></td>
+      <td>${a.submitted_at}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function filterTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  renderTable(allApps.filter(a =>
+    (a.full_name+a.pass_id+a.vehicle_no+a.roll_no+a.department).toLowerCase().includes(q)
+  ));
+}
+
+async function loadLog() {
+  const res = await fetch('/api/admin/log');
+  const logs = await res.json();
+  document.getElementById('log-list').innerHTML = `<table>
+    <thead><tr><th>Time</th><th>Pass ID</th><th>Action</th><th>Done By</th><th>Remarks</th></tr></thead>
+    <tbody>${logs.map(l=>`<tr>
+      <td>${l.created_at}</td>
+      <td><code>${l.pass_id}</code></td>
+      <td>${l.action}</td>
+      <td>${l.done_by}</td>
+      <td>${l.remarks||'-'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function showTab(tab) {
+  document.getElementById('tab-all-content').style.display = tab==='all' ? '' : 'none';
+  document.getElementById('tab-log-content').style.display = tab==='log' ? '' : 'none';
+  document.getElementById('tab-all').style.background = tab==='all' ? '#0a192f' : '#e2e8f0';
+  document.getElementById('tab-all').style.color = tab==='all' ? '#fff' : '#475569';
+  document.getElementById('tab-log').style.background = tab==='log' ? '#0a192f' : '#e2e8f0';
+  document.getElementById('tab-log').style.color = tab==='log' ? '#fff' : '#475569';
+  if (tab==='log') loadLog();
+}
+
+loadStats(); loadAll();
+</script>
+{% endblock %}

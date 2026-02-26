@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Staff Login{% endblock %}
+{% block content %}
+<div class="container" style="max-width:420px">
+  <div class="card" style="margin-top:60px">
+    <h2 style="text-align:center">🔐 Staff Login</h2>
+    <p style="text-align:center;color:#64748b;margin-bottom:24px">Transport In-Charge / Principal / Admin</p>
+    <div id="err"></div>
+    <label>Username</label>
+    <input type="text" id="uname" placeholder="Enter username" autocomplete="username">
+    <label>Password</label>
+    <input type="password" id="pwd" placeholder="Enter password" autocomplete="current-password">
+    <button class="btn btn-primary btn-full" onclick="doLogin()" id="login-btn">Login →</button>
+    <p style="text-align:center;margin-top:16px;font-size:.82rem;color:#94a3b8">
+      Default credentials:<br>transport / transport123 &nbsp;|&nbsp; principal / principal123
+    </p>
+  </div>
+</div>
+<script>
+async function doLogin() {
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Logging in...'; btn.disabled = true;
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({username: document.getElementById('uname').value, password: document.getElementById('pwd').value})
+  });
+  const data = await res.json();
+  if (data.success) {
+    const routes = {transport:'/transport', principal:'/principal', admin:'/admin'};
+    window.location.href = routes[data.role] || '/';
+  } else {
+    document.getElementById('err').innerHTML = '<div class="alert alert-error">❌ Invalid credentials</div>';
+    btn.textContent = 'Login →'; btn.disabled = false;
+  }
+}
+document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+</script>
+{% endblock %}

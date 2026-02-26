@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Principal Dashboard{% endblock %}
+{% block content %}
+<div class="container" style="max-width:1100px">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2>🏫 Principal Approval Dashboard</h2>
+      <span style="color:#64748b;font-size:.9rem">Logged in as: <strong>{{ username }}</strong></span>
+    </div>
+    <p style="color:#64748b;margin-bottom:20px">These applications have been verified by Transport In-Charge and are awaiting your final approval.</p>
+    <div id="app-list"><div class="spinner">⏳ Loading applications...</div></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px;width:520px;max-width:95%;max-height:85vh;overflow-y:auto">
+    <h3 id="modal-title" style="margin-bottom:16px"></h3>
+    <div id="modal-body"></div>
+    <label style="margin-top:16px">Remarks</label>
+    <textarea id="modal-remarks" rows="3" placeholder="Optional remarks..."></textarea>
+    <div style="display:flex;gap:12px;margin-top:14px">
+      <button class="btn btn-success" onclick="submitReview('approve')">✅ Approve & Issue Pass</button>
+      <button class="btn btn-danger" onclick="submitReview('reject')">❌ Reject Application</button>
+      <button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPassId = '';
+
+async function loadApps() {
+  const res = await fetch('/api/principal/applications');
+  const apps = await res.json();
+  const list = document.getElementById('app-list');
+  if (!apps.length) {
+    list.innerHTML = '<div class="alert alert-info">✅ No applications awaiting your approval.</div>';
+    return;
+  }
+  list.innerHTML = `<table>
+    <thead><tr><th>Pass ID</th><th>Name</th><th>Dept</th><th>Vehicle No</th><th>Transport Remarks</th><th>Action</th></tr></thead>
+    <tbody>${apps.map(a => `
+      <tr>
+        <td><code>${a.pass_id}</code></td>
+        <td>${a.full_name}<br><small style="color:#94a3b8">${a.roll_no}</small></td>
+        <td>${a.department}<br><small style="color:#94a3b8">${a.year}</small></td>
+        <td>${a.vehicle_no}<br><small style="color:#94a3b8">${a.vehicle_type}</small></td>
+        <td>${a.transport_remarks || '-'}</td>
+        <td><button class="btn btn-warning" style="padding:6px 14px;font-size:.82rem" onclick="openModal('${a.pass_id}','${a.full_name}','${a.roll_no}','${a.vehicle_no}','${a.vehicle_type}','${a.department}','${a.year}','${a.rc_book}','${a.license}','${a.insurance}','${a.transport_remarks||''}')">Review</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openModal(pid, name, roll, vehicle, vtype, dept, year, rc, dl, ins, tRemarks) {
+  currentPassId = pid;
+  document.getElementById('modal-title').textContent = `Final Review: ${name} (${pid})`;
+  document.getElementById('modal-body').innerHTML = `
+    <table>
+      <tr><th>Name</th><td>${name}</td></tr>
+      <tr><th>Roll No</th><td>${roll}</td></tr>
+      <tr><th>Department</th><td>${dept} — ${year}</td></tr>
+      <tr><th>Vehicle</th><td>${vehicle} (${vtype})</td></tr>
+      <tr><th>Transport Remarks</th><td>${tRemarks || 'None'}</td></tr>
+      <tr><th>RC Book</th><td><a href="/uploads/${rc}" target="_blank" class="btn btn-info" style="padding:4px 10px;font-size:.8rem">View RC</a></td></tr>
+      <tr><th>Driving License</th><td><a href="/uploads/${dl}" target="_blank" class="btn btn-info" style="padding:4px 10px;font-size:.8rem">View DL</a></td></tr>
+      <tr><th>Insurance</th><td><a href="/uploads/${ins}" target="_blank" class="btn btn-info" style="padding:4px 10px;font-size:.8rem">View Insurance</a></td></tr>
+    </table>`;
+  document.getElementById('modal-remarks').value = '';
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+async function submitReview(action) {
+  const remarks = document.getElementById('modal-remarks').value.trim();
+  const res = await fetch(`/api/principal/review/${currentPassId}`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({action, remarks})
+  });
+  const data = await res.json();
+  if (data.success) {
+    closeModal();
+    alert(action === 'approve' ? '✅ Pass Approved! Student can now view their digital pass.' : '❌ Application rejected.');
+    loadApps();
+  } else {
+    alert('Error: ' + (data.error || 'Unknown'));
+  }
+}
+
+loadApps();
+</script>
+{% endblock %}

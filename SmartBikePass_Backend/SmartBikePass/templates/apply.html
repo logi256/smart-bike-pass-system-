@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Apply for Bike Pass{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="card">
+    <h2>📋 Bike Pass Application</h2>
+    <p style="color:#64748b;margin-bottom:24px">Fill in all details and upload the required documents to apply for your Smart Bike Pass.</p>
+
+    <div id="alert-box"></div>
+
+    <form id="apply-form" enctype="multipart/form-data">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px">
+        <div>
+          <label>Full Name *</label>
+          <input type="text" name="full_name" placeholder="e.g. Rahul Kumar" required>
+        </div>
+        <div>
+          <label>Roll Number *</label>
+          <input type="text" name="roll_no" placeholder="e.g. CS21B001" required>
+        </div>
+        <div>
+          <label>Email Address *</label>
+          <input type="email" name="email" placeholder="student@college.edu" required>
+        </div>
+        <div>
+          <label>Phone Number *</label>
+          <input type="tel" name="phone" placeholder="10-digit mobile number" required>
+        </div>
+        <div>
+          <label>Department *</label>
+          <select name="department" required>
+            <option value="">Select Department</option>
+            <option>Computer Science</option>
+            <option>Electronics</option>
+            <option>Mechanical</option>
+            <option>Civil</option>
+            <option>Electrical</option>
+            <option>Information Technology</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Year of Study *</label>
+          <select name="year" required>
+            <option value="">Select Year</option>
+            <option>1st Year</option>
+            <option>2nd Year</option>
+            <option>3rd Year</option>
+            <option>4th Year</option>
+          </select>
+        </div>
+        <div>
+          <label>Vehicle Registration Number *</label>
+          <input type="text" name="vehicle_no" placeholder="e.g. TN01AB1234" required style="text-transform:uppercase">
+        </div>
+        <div>
+          <label>Vehicle Type *</label>
+          <select name="vehicle_type" required>
+            <option value="">Select Type</option>
+            <option>Two Wheeler (Petrol)</option>
+            <option>Two Wheeler (Electric)</option>
+            <option>Bicycle</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="border-top:1.5px dashed #e2e8f0;margin:10px 0 20px;padding-top:20px">
+        <h3 style="margin-bottom:16px">📁 Document Uploads</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 20px">
+          <div>
+            <label>RC Book * <span style="font-weight:400;color:#94a3b8">(PDF/Image)</span></label>
+            <input type="file" name="rc_book" accept=".pdf,.jpg,.jpeg,.png" required>
+          </div>
+          <div>
+            <label>Driving License * <span style="font-weight:400;color:#94a3b8">(PDF/Image)</span></label>
+            <input type="file" name="license" accept=".pdf,.jpg,.jpeg,.png" required>
+          </div>
+          <div>
+            <label>Insurance Copy * <span style="font-weight:400;color:#94a3b8">(PDF/Image)</span></label>
+            <input type="file" name="insurance" accept=".pdf,.jpg,.jpeg,.png" required>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="submit-btn">🚀 Submit Application</button>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('apply-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '⏳ Submitting...';
+  btn.disabled = true;
+
+  const formData = new FormData(this);
+  try {
+    const res = await fetch('/api/apply', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('alert-box').innerHTML = `
+        <div class="alert alert-success">
+          ✅ Application submitted successfully!<br>
+          <strong>Your Pass ID: ${data.pass_id}</strong><br>
+          <small>Save this ID to track your application status.</small><br><br>
+          <a href="/status" class="btn btn-success" style="margin-top:8px">🔍 Track Status</a>
+        </div>`;
+      this.reset();
+    } else {
+      document.getElementById('alert-box').innerHTML = `<div class="alert alert-error">❌ ${data.error}</div>`;
+    }
+  } catch(err) {
+    document.getElementById('alert-box').innerHTML = `<div class="alert alert-error">❌ Network error. Please try again.</div>`;
+  }
+  btn.textContent = '🚀 Submit Application';
+  btn.disabled = false;
+  window.scrollTo(0,0);
+});
+</script>
+{% endblock %}
